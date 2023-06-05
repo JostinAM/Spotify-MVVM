@@ -1,30 +1,25 @@
-package cr.ac.una.spotify;
+package cr.ac.una.spotify.viewModel
 
-import android.os.Bundle
 import android.util.Base64
-import android.widget.Button
-import android.widget.EditText
+import android.util.Log
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
-
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import cr.ac.una.spotify.entity.AccessTokenResponse
 import cr.ac.una.spotify.entity.Album
 import cr.ac.una.spotify.entity.Track
 import cr.ac.una.spotify.entity.TrackResponse
 import cr.ac.una.spotify.service.SpotifyService
-
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-
-class MainActivity : AppCompatActivity() {
-
-    private lateinit var searchButton: Button
-    private lateinit var searchEditText: EditText
+class TrackViewModel: ViewModel() {
+    private var _tracks: MutableLiveData<List<Track>> = MutableLiveData()
+    var tracks: MutableLiveData<List<Track>> = _tracks
+//    lateinit var apiService : TrackDAO
 
     private val spotifyServiceToken: SpotifyService by lazy {
         val retrofit = Retrofit.Builder()
@@ -43,13 +38,12 @@ class MainActivity : AppCompatActivity() {
         retrofit.create(SpotifyService::class.java)
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+    suspend fun startLoadingTracks(query: String) {
 
-//        searchTracks("iron maiden")
-
+        //reset tracks
+        _tracks.postValue(listOf())
+        var lista = searchTracks(query)
+        _tracks.postValue(lista)
     }
 
     private fun searchTracks(query: String): MutableList<Track> {
@@ -80,8 +74,8 @@ class MainActivity : AppCompatActivity() {
 
                                     if (trackResponse != null && trackResponse.tracks.items.isNotEmpty()) {
                                         for (track in trackResponse!!.tracks.items){
-                                            System.out.println(track.name + track.album.name)
-
+//                                            System.out.println(track.name + track.album.name)
+//                                            Log.d("Track", track.name + track.album.name)
                                             val newTrack = Track(
                                                 track.name,
                                                 Album(track.album.name, track.album.images),
@@ -127,12 +121,9 @@ class MainActivity : AppCompatActivity() {
         return tracks
     }
 
-    private fun displayTrackInfo(trackName: String, artistName: String) {
-        val message = "Canción encontrada: $trackName - $artistName"
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    private fun displayErrorMessage(errorMessage: String) {
+        Toast.makeText(null, errorMessage, Toast.LENGTH_SHORT).show()
+        //Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
     }
 
-    private fun displayErrorMessage(errorMessage: String) {
-        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
-    }
 }
