@@ -19,34 +19,19 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URL
 
-class TrackAdapter (var tracks: ArrayList<Track>) :
+class TrackAdapter(
+    var tracks: ArrayList<Track>,
+    var optionsMenuClickListener: OptionsMenuClickListener
+) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-//    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-//        var view = convertView
-//        if (view == null) {
-//            view = LayoutInflater.from(context).inflate(cr.ac.una.spotify.R.layout.list_item, parent, false)
-//        }
-//
-//        val track = getItem(position)
-//
-//        val albumImage = view!!.findViewById<ImageView>(cr.ac.una.spotify.R.id.albumImage)
-//        val songTitle = view!!.findViewById<TextView>(cr.ac.una.spotify.R.id.songTitle)
-//        val songArtist = view!!.findViewById<TextView>(cr.ac.una.spotify.R.id.songArtist)
-//
-//        songTitle.text = track!!.name.toString();
-//        songArtist.text = track!!.artist.toString();
-//        //ERROR HERE
-//        CoroutineScope(Dispatchers.Main).launch {
-//            val bitmap = withContext(Dispatchers.IO) { loadImage(track.imageUrl) }
-//            albumImage.setImageBitmap(bitmap)
-//        }
-//
-//        return view
-//    }
+    interface OptionsMenuClickListener {
+        fun onOptionsMenuClick(position: Int)
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(cr.ac.una.spotify.R.layout.list_item, parent, false)
+        val view = LayoutInflater.from(parent.context)
+            .inflate(cr.ac.una.spotify.R.layout.list_item, parent, false)
         return TrackViewHolder(view)
     }
 
@@ -63,33 +48,37 @@ class TrackAdapter (var tracks: ArrayList<Track>) :
     }
 
 
-
     inner class TrackViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
-
 
 
         val albumImage = itemView.findViewById<ImageView>(cr.ac.una.spotify.R.id.albumImage)
         val songTitle = itemView.findViewById<TextView>(cr.ac.una.spotify.R.id.songTitle)
         val songArtist = itemView.findViewById<TextView>(cr.ac.una.spotify.R.id.songArtist)
 
+        val optionsMenu = itemView.findViewById<TextView>(cr.ac.una.spotify.R.id.textViewOptions)
+
         fun bind(track: Track) {
 
-            //setbackground transparent
-
-//            itemView.setBackgroundColor(0x00000000)
 
             songTitle.text = track!!.name.toString();
             songArtist.text = track!!.artists[0].name.toString();
-            //ERROR HERE
+
             CoroutineScope(Dispatchers.Main).launch {
-                val bitmap = withContext(Dispatchers.IO) { loadImage(track.imageUrl) }
+                val bitmap =
+                    withContext(Dispatchers.IO) { loadImage(track!!.album.images[1].url.toString()) }
                 albumImage.setImageBitmap(bitmap)
             }
 
-            itemView.setOnClickListener(){
-                Toast.makeText(itemView.context, "Track: " + track.name, Toast.LENGTH_SHORT).show()
+//            itemView.setOnClickListener(){
+//                Toast.makeText(itemView.context, "Track: " + track.name, Toast.LENGTH_SHORT).show()
+//            }
+
+            optionsMenu.setOnClickListener {
+                optionsMenuClickListener.onOptionsMenuClick(position = adapterPosition)
+//                Toast.makeText(itemView.context, "Track: " + track.name, Toast.LENGTH_SHORT)
+//                    .show()
             }
+
         }
 
 
@@ -113,11 +102,11 @@ class TrackAdapter (var tracks: ArrayList<Track>) :
 
         tracks = newTracks
         if (!newTracks.isEmpty())
-            if(newTracks[0].name !="")
-                //create empty list of images
+            if (newTracks[0].name != "")
+            //create empty list of images
 
 //                newTracks.add(0, Track("", Album("", ArrayList<null>),"","", ""))
-        notifyDataSetChanged()
+                notifyDataSetChanged()
 
     }
 

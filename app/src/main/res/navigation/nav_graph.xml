@@ -12,14 +12,14 @@
         tools:layout="@layout/fragment_lista_tracks">
 
         <action
-            android:id="@+id/action_FirstFragment_to_SecondFragment"
-            app:destination="@id/SecondFragment" />
+            android:id="@+id/action_FirstFragment_to_AlbumFragment"
+            app:destination="@id/AlbumFragment" />
     </fragment>
     <fragment
-        android:id="@+id/SecondFragment"
-        android:name="cr.ac.una.spotify.view.SecondFragment"
-        android:label="@string/second_fragment_label"
-        tools:layout="@layout/fragment_second">
+        android:id="@+id/AlbumFragment"
+        android:name="cr.ac.una.spotify.view.AlbumFragment"
+        android:label="@string/album_fragment_label"
+        tools:layout="@layout/fragment_album">
 
         <action
             android:id="@+id/action_SecondFragment_to_FirstFragment"

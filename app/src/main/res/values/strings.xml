@@ -4,4 +4,7 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="second_fragment_label">second_fragment_label</string>
+    <string name="viewAlbum">View album</string>
+    <string name="viewArtist">View artist</string>
+    <string name="album_fragment_label">album_fragment_label</string>
 </resources>
