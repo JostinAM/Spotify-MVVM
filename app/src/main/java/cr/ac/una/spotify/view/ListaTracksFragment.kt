@@ -14,18 +14,25 @@ import android.widget.SearchView
 import android.widget.Toast
 import androidx.core.view.get
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import cr.ac.una.spotify.R
 import cr.ac.una.spotify.adapter.TrackAdapter
+import cr.ac.una.spotify.dao.BusquedaDAO
 import cr.ac.una.spotify.databinding.FragmentListaTracksBinding
+import cr.ac.una.spotify.db.AppDatabase
+import cr.ac.una.spotify.entity.Busqueda
 import cr.ac.una.spotify.entity.Track
 import cr.ac.una.spotify.viewModel.TrackViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class ListaTracksFragment : Fragment() {
@@ -34,6 +41,14 @@ class ListaTracksFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var trackViewModel: TrackViewModel
     private lateinit var tracks: List<Track>
+
+    private lateinit var busquedaDAO:BusquedaDAO
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        busquedaDAO = AppDatabase.getInstance(requireContext()).busquedaDao()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -74,6 +89,22 @@ class ListaTracksFragment : Fragment() {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 if (query != null) {
                     onSearchTracks(query)
+
+                    val busqueda =Busqueda(
+                        id=null,
+                        text = query,
+                        date = Date()
+                    )
+
+
+                    lifecycleScope.launch {
+                        withContext(Dispatchers.IO) {
+                            busquedaDAO.insert(busqueda)
+                        }
+                    }
+
+
+
                     searchView.clearFocus()
                     val imm =
                         requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
