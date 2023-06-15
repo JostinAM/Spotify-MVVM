@@ -7,4 +7,5 @@
     <string name="viewAlbum">View album</string>
     <string name="viewArtist">View artist</string>
     <string name="album_fragment_label">album_fragment_label</string>
+    <string name="artist_fragment_label">artist_fragment_label</string>
 </resources>

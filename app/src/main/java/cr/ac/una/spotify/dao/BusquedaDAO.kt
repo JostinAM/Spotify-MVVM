@@ -9,8 +9,11 @@ import cr.ac.una.spotify.entity.Busqueda;
 @Dao
 interface BusquedaDAO {
     @Insert
-    fun insert(entity:Busqueda)
+    fun insert(entity: Busqueda)
 
-    @Query("SELECT * FROM busqueda WHERE text LIKE '%' || :searchString || '%'")
+    @Query("SELECT DISTINCT * FROM busqueda WHERE text LIKE '%' || :searchString || '%'")
     fun buscarCoincidencias(searchString: String): List<Busqueda>
+
+    @Query("SELECT DISTINCT * FROM busqueda WHERE text LIKE :searchText LIMIT 6")
+    fun searchBusqueda(searchText: String): List<Busqueda>
 }

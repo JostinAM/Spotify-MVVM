@@ -14,6 +14,10 @@
         <action
             android:id="@+id/action_FirstFragment_to_AlbumFragment"
             app:destination="@id/AlbumFragment" />
+        <action
+            android:id="@+id/action_FirstFragment_to_ArtistFragment"
+            app:destination="@id/ArtistFragment" />
+
     </fragment>
     <fragment
         android:id="@+id/AlbumFragment"
@@ -25,4 +29,16 @@
             android:id="@+id/action_SecondFragment_to_FirstFragment"
             app:destination="@id/FirstFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/ArtistFragment"
+        android:name="cr.ac.una.spotify.view.ArtistFragment"
+        android:label="@string/artist_fragment_label"
+        tools:layout="@layout/fragment_artist">
+
+        <action
+            android:id="@+id/action_ArtistFragment_to_FirstFragment"
+            app:destination="@id/FirstFragment" />
+    </fragment>
+
 </navigation>

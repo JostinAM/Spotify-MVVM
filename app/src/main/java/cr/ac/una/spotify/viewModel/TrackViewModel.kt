@@ -1,16 +1,10 @@
 package cr.ac.una.spotify.viewModel
 
 import android.util.Base64
-import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import cr.ac.una.spotify.entity.*
 import cr.ac.una.spotify.service.SpotifyService
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -24,6 +18,18 @@ class TrackViewModel : ViewModel() {
 
     private var _album: MutableLiveData<Album> = MutableLiveData()
     var album: MutableLiveData<Album> = _album
+
+    private var _genres: MutableLiveData<List<String>> = MutableLiveData()
+    var genres: MutableLiveData<List<String>> = _genres
+
+    private var _tracksForAlbum: MutableLiveData<List<Track>> = MutableLiveData()
+    var tracksForAlbum: MutableLiveData<List<Track>> = _tracksForAlbum
+
+    private var _artist: MutableLiveData<ArtistRequest> = MutableLiveData()
+    var artist: MutableLiveData<ArtistRequest> = _artist
+
+    private var _topTracks: MutableLiveData<List<TopTrack>> = MutableLiveData()
+    var topTracks: MutableLiveData<List<TopTrack>> = _topTracks
 
     private val spotifyServiceToken: SpotifyService by lazy {
         val retrofit = Retrofit.Builder()
@@ -50,6 +56,15 @@ class TrackViewModel : ViewModel() {
 
         _tracks.postValue(lista)
     }
+
+    fun startLoadingAlbum(id: String) {
+        requestAlbum(id)
+    }
+
+    fun startLoadingArtist(id: String) {
+        requestArtist(id)
+    }
+
 
     private fun displayErrorMessage(s: String) {
         System.out.println("Error: " + s)
@@ -152,7 +167,7 @@ class TrackViewModel : ViewModel() {
         return tracks
     }
 
-    private fun requestAlbum(id: String): Album {
+    private fun requestAlbum(id: String) {
         val clientId = "f13969da015a4f49bb1f1edef2185d4e"
         val clientSecret = "e3077426f4714315937111d5e82cd918"
         val base64Auth =
@@ -186,10 +201,39 @@ class TrackViewModel : ViewModel() {
                                 if (response.isSuccessful) {
                                     val albumResponse = response.body()
 
-
                                     if (albumResponse != null) {
+                                        var tracks = arrayListOf<Track>()
 
-                                        println("AlbumResponse: $albumResponse")
+
+                                        for (track in albumResponse.tracks.items) {
+                                            val newTrack = Track(
+                                                track.name,
+                                                qAlbum,
+                                                track.uri,
+                                                track.artists
+
+                                            )
+
+                                            tracks.add(newTrack)
+
+                                        }
+
+                                        qAlbum = Album(
+                                            albumResponse.name,
+                                            albumResponse.images,
+                                            albumResponse.artists,
+                                            albumResponse.release_date,
+                                            albumResponse.genres,
+                                            tracks,
+                                        )
+
+                                        _album.postValue(qAlbum)
+                                        _genres.postValue(albumResponse.genres)
+                                        _tracksForAlbum.postValue(tracks)
+
+                                        println("FINAL GENRES: " + albumResponse.genres)
+                                        println("FINAL TRACKS: " + tracks)
+
 
                                     } else {
                                         displayErrorMessage("No se encontró el album.")
@@ -220,10 +264,144 @@ class TrackViewModel : ViewModel() {
             }
         })
 
-        return qAlbum
 
     }
 
+    private fun requestArtist(id: String) {
+        val clientId = "f13969da015a4f49bb1f1edef2185d4e"
+        val clientSecret = "e3077426f4714315937111d5e82cd918"
+        val base64Auth =
+            Base64.encodeToString("$clientId:$clientSecret".toByteArray(), Base64.NO_WRAP)
 
+        val tokenRequest = spotifyServiceToken.getAccessToken(
+            "Basic $base64Auth",
+            "client_credentials"
+        )
+
+        var tracks = mutableListOf<TopTrack>()
+//        _topTracks.postValue(listOf())
+
+        tokenRequest.enqueue(object : Callback<AccessTokenResponse> {
+            override fun onResponse(
+                call: Call<AccessTokenResponse>,
+                response: Response<AccessTokenResponse>
+            ) {
+                if (response.isSuccessful) {
+                    val accessTokenResponse = response.body()
+                    val accessToken = accessTokenResponse?.accessToken
+
+                    if (accessToken != null) {
+
+                        val searchRequest = spotifyService.getArtist("Bearer $accessToken", id)
+
+                        searchRequest.enqueue(object : Callback<ArtistRequest> {
+                            override fun onResponse(
+                                call: Call<ArtistRequest>,
+                                response: Response<ArtistRequest>
+                            ) {
+                                if (response.isSuccessful) {
+                                    val artistResponse = response.body()
+
+                                    if (artistResponse != null) {
+
+                                        val qArtist = ArtistRequest(
+                                            artistResponse.id,
+                                            artistResponse.images,
+                                            artistResponse.name,
+                                        )
+
+                                        _artist.postValue(qArtist)
+
+                                        println("FINAL GENRES: $qArtist")
+                                        println("FINAL TRACKS: " + tracks)
+
+
+                                    } else {
+                                        displayErrorMessage("No se encontró el album.")
+                                    }
+                                } else {
+                                    println("Mensaje:    " + response.raw())
+                                    displayErrorMessage("Error en la respuesta del servidor.")
+                                }
+                            }
+
+                            override fun onFailure(call: Call<ArtistRequest>, t: Throwable) {
+                                displayErrorMessage("Error en la solicitud de búsqueda.")
+                                println("Error: " + t.message)
+                            }
+                        })
+
+                        val searchTopTracks = spotifyService.getTopTracks("Bearer $accessToken", id)
+
+                        searchTopTracks.enqueue(object : Callback<TopTracksResponse> {
+                            override fun onResponse(
+                                call: Call<TopTracksResponse>,
+                                response: Response<TopTracksResponse>
+                            ) {
+                                if (response.isSuccessful) {
+                                    val topTracksResponse = response.body()
+
+                                    if (topTracksResponse != null && topTracksResponse.tracks.isNotEmpty()) {
+
+                                        println("TOP TRACK BEFORE FOR: ${topTracksResponse.tracks}")
+
+                                        for (track in topTracksResponse!!.tracks) {
+
+                                            var prev = ""
+                                            if (track.preview_url != null) {
+                                                prev = track.preview_url
+                                            }
+
+                                            var newTrack = TopTrack(
+                                                Album(
+                                                    track.album.name,
+                                                    track.album.images,
+                                                    track.album.artists,
+                                                    "",
+                                                    ArrayList(),
+                                                    ArrayList()
+                                                ),
+                                                track.name,
+                                                track.popularity,
+                                                prev,
+                                            )
+
+                                            tracks.add(newTrack)
+                                        }
+
+                                        _topTracks.postValue(tracks)
+
+                                        println("TOP TRACKS FROM VIEWMODEL: $tracks")
+
+
+                                    } else {
+                                        displayErrorMessage("No se encontró el album.")
+                                    }
+                                } else {
+                                    println("Mensaje:    " + response.raw())
+                                    displayErrorMessage("Error en la respuesta del servidor.")
+                                }
+                            }
+
+                            override fun onFailure(call: Call<TopTracksResponse>, t: Throwable) {
+                                displayErrorMessage("Error en la solicitud de búsqueda.")
+                                println("Error: " + t.message)
+                            }
+                        })
+
+                    } else {
+                        displayErrorMessage("Error al obtener el accessToken.")
+                    }
+                } else {
+                    System.out.println("Mensaje:    " + response.raw())
+                    displayErrorMessage("Error en la respuesta del servidor.")
+                }
+            }
+
+            override fun onFailure(call: Call<AccessTokenResponse>, t: Throwable) {
+                displayErrorMessage("Error en la solicitud de accessToken.")
+            }
+        })
+    }
 }
 

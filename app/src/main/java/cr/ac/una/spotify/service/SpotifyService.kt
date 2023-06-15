@@ -23,4 +23,16 @@ interface SpotifyService {
         @Header("Authorization") authorization: String,
         @Path("id") id: String
     ): Call<AlbumRequest>
+
+    @GET("v1/artists/{id}")
+    fun getArtist(
+        @Header("Authorization") authorization: String,
+        @Path("id") id: String
+    ): Call<ArtistRequest>
+
+    @GET("v1/artists/{id}/top-tracks?country=ES")
+    fun getTopTracks(
+        @Header("Authorization") authorization: String,
+        @Path("id") id: String
+    ): Call<TopTracksResponse>
 }
