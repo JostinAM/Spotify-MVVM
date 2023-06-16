@@ -18,6 +18,10 @@
             android:id="@+id/action_FirstFragment_to_ArtistFragment"
             app:destination="@id/ArtistFragment" />
 
+        <action
+            android:id="@+id/action_FirstFragment_to_RelatedFragment"
+            app:destination="@id/ListRelatedArtistsFragment" />
+
     </fragment>
     <fragment
         android:id="@+id/AlbumFragment"
@@ -40,5 +44,16 @@
             android:id="@+id/action_ArtistFragment_to_FirstFragment"
             app:destination="@id/FirstFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/ListRelatedArtistsFragment"
+        android:name="cr.ac.una.spotify.view.ListRelatedArtistsFragment"
+        android:label="@string/related_artists_fragment_label"
+        tools:layout="@layout/fragment_list_related_artists">
+
+        <action
+            android:id="@+id/action_ListRelatedArtistsFragment_to_FirstFragment"
+            app:destination="@id/FirstFragment" />
+    </fragment>
+
 
 </navigation>

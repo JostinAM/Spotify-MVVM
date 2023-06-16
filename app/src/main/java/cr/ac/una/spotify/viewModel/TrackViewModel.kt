@@ -31,6 +31,9 @@ class TrackViewModel : ViewModel() {
     private var _topTracks: MutableLiveData<List<TopTrack>> = MutableLiveData()
     var topTracks: MutableLiveData<List<TopTrack>> = _topTracks
 
+    private var _relatedArtists: MutableLiveData<List<RelatedArtist>> = MutableLiveData()
+    var relatedArtists: MutableLiveData<List<RelatedArtist>> = _relatedArtists
+
     private val spotifyServiceToken: SpotifyService by lazy {
         val retrofit = Retrofit.Builder()
             .baseUrl("https://accounts.spotify.com/")
@@ -63,6 +66,10 @@ class TrackViewModel : ViewModel() {
 
     fun startLoadingArtist(id: String) {
         requestArtist(id)
+    }
+
+    fun startLoadingRelated(id: String){
+        requestRelated(id)
     }
 
 
@@ -127,7 +134,8 @@ class TrackViewModel : ViewModel() {
                                                     track.album.id
                                                 ),
                                                 track.uri,
-                                                track.artists
+                                                track.artists,
+                                                track.preview_url
                                             )
 
                                             tracks.add(newTrack)
@@ -210,7 +218,8 @@ class TrackViewModel : ViewModel() {
                                                 track.name,
                                                 qAlbum,
                                                 track.uri,
-                                                track.artists
+                                                track.artists,
+                                                track.preview_url
 
                                             )
 
@@ -388,6 +397,91 @@ class TrackViewModel : ViewModel() {
                                 println("Error: " + t.message)
                             }
                         })
+
+                    } else {
+                        displayErrorMessage("Error al obtener el accessToken.")
+                    }
+                } else {
+                    System.out.println("Mensaje:    " + response.raw())
+                    displayErrorMessage("Error en la respuesta del servidor.")
+                }
+            }
+
+            override fun onFailure(call: Call<AccessTokenResponse>, t: Throwable) {
+                displayErrorMessage("Error en la solicitud de accessToken.")
+            }
+        })
+    }
+
+    private fun requestRelated(id: String) {
+        val clientId = "f13969da015a4f49bb1f1edef2185d4e"
+        val clientSecret = "e3077426f4714315937111d5e82cd918"
+        val base64Auth =
+            Base64.encodeToString("$clientId:$clientSecret".toByteArray(), Base64.NO_WRAP)
+
+        val tokenRequest = spotifyServiceToken.getAccessToken(
+            "Basic $base64Auth",
+            "client_credentials"
+        )
+
+       // var tracks = mutableListOf<TopTrack>()
+//        _topTracks.postValue(listOf())
+
+        tokenRequest.enqueue(object : Callback<AccessTokenResponse> {
+            override fun onResponse(
+                call: Call<AccessTokenResponse>,
+                response: Response<AccessTokenResponse>
+            ) {
+                if (response.isSuccessful) {
+                    val accessTokenResponse = response.body()
+                    val accessToken = accessTokenResponse?.accessToken
+
+                    if (accessToken != null) {
+
+                        val searchRequest = spotifyService.getRelatedArtists("Bearer $accessToken", id)
+
+                        searchRequest.enqueue(object : Callback<RelatedArtistsResponse> {
+                            override fun onResponse(
+                                call: Call<RelatedArtistsResponse>,
+                                response: Response<RelatedArtistsResponse>
+                            ) {
+                                if (response.isSuccessful) {
+                                    val artistResponse = response.body()
+
+                                    if (artistResponse != null) {
+
+
+
+
+                                        //val qArtist = ArtistRequest(
+                                          //  artistResponse.id,
+                                            //artistResponse.images,
+                                            //artistResponse.name,
+                                        //)
+
+                                        //_artist.postValue(qArtist)
+
+
+                                        _relatedArtists.postValue(artistResponse.artists)
+                                        println("FINAL RLATED: $artistResponse")
+
+
+
+                                    } else {
+                                        displayErrorMessage("No se encontró el album.")
+                                    }
+                                } else {
+                                    println("Mensaje:    " + response.raw())
+                                    displayErrorMessage("Error en la respuesta del servidor.")
+                                }
+                            }
+
+                            override fun onFailure(call: Call<RelatedArtistsResponse>, t: Throwable) {
+                                displayErrorMessage("Error en la solicitud de búsqueda.")
+                                println("Error: " + t.message)
+                            }
+                        })
+
 
                     } else {
                         displayErrorMessage("Error al obtener el accessToken.")

@@ -8,4 +8,6 @@
     <string name="viewArtist">View artist</string>
     <string name="album_fragment_label">album_fragment_label</string>
     <string name="artist_fragment_label">artist_fragment_label</string>
+    <string name="viewRelated">View Related</string>
+    <string name="related_artists_fragment_label">related_artists_fragment_label</string>
 </resources>

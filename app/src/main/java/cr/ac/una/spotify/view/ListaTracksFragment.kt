@@ -260,6 +260,24 @@ class ListaTracksFragment : Fragment() {
 
                         return true
                     }
+                    R.id.viewRelated ->{
+
+                        println(binding.listView[position].findViewById(R.id.textViewOptions))
+
+                        val bundle = Bundle()
+
+                        bundle.putString("artistID", tracks[position].artists[0].id)
+
+                        findNavController().navigate(
+                            R.id.action_FirstFragment_to_RelatedFragment,
+                            bundle
+                        )
+
+
+                        return true
+
+
+                    }
 
                 }
                 return false

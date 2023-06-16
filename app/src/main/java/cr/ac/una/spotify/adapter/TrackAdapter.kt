@@ -2,11 +2,13 @@ package cr.ac.una.spotify.adapter
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.MediaPlayer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import cr.ac.una.spotify.entity.Track
 import kotlinx.coroutines.CoroutineScope
@@ -20,6 +22,8 @@ class TrackAdapter(
     var optionsMenuClickListener: OptionsMenuClickListener
 ) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    private val mediaPlayer: MediaPlayer = MediaPlayer()
 
     interface OptionsMenuClickListener {
         fun onOptionsMenuClick(position: Int)
@@ -52,6 +56,42 @@ class TrackAdapter(
         val songArtist = itemView.findViewById<TextView>(cr.ac.una.spotify.R.id.songArtist)
 
         val optionsMenu = itemView.findViewById<TextView>(cr.ac.una.spotify.R.id.textViewOptions)
+
+
+        private fun handlePreviewClick() {
+            if (mediaPlayer.isPlaying) {
+                mediaPlayer.stop()
+                mediaPlayer.reset()
+            } else {
+                val previewUrl = tracks[adapterPosition].preview_url
+                if (previewUrl != null) {
+                    try {
+                        mediaPlayer.setDataSource(previewUrl)
+                        mediaPlayer.prepare()
+                        mediaPlayer.start()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        Toast.makeText(
+                            itemView.context,
+                            "No preview available",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                } else {
+                    Toast.makeText(
+                        itemView.context,
+                        "No preview available",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+
+        init {
+            albumImage.setOnClickListener {
+                handlePreviewClick()
+            }
+        }
 
         fun bind(track: Track) {
 
